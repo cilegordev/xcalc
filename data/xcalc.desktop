@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=XCalc
+GenericName=Calculator
+Comment=Standard, scientific, programmer and RPN calculator
+Exec=xcalc
+Icon=xcalc
+Terminal=false
+Categories=Utility;Calculator;GTK;
+Keywords=calculator;calc;math;scientific;programmer;rpn;
+StartupNotify=true
+StartupWMClass=xcalc

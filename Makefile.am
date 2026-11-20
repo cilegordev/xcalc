@@ -22,24 +22,29 @@
 SUBDIRS = man
 bin_PROGRAMS = xcalc
 
-AM_CFLAGS = $(XCALC_CFLAGS) $(CWARNFLAGS) -D_CONST_X_STRING
+AM_CFLAGS = $(XCALC_CFLAGS) $(CWARNFLAGS)
 xcalc_LDADD = $(XCALC_LIBS) -lm
 
-xcalc_SOURCES =	\
+xcalc_SOURCES = \
         actions.c \
         math.c \
         xcalc.c \
-        xcalc.h
+        xcalc.h \
+        style.h
 
-# App default files  (*.ad)
+# Desktop entry and icon
+desktopdir = $(datadir)/applications
+dist_desktop_DATA = data/xcalc.desktop
 
-DISTCHECK_CONFIGURE_FLAGS = --with-appdefaultdir=\$${datadir}/X11/app-defaults
+icondir = $(datadir)/icons/hicolor/scalable/apps
+dist_icon_DATA = data/icons/hicolor/scalable/apps/xcalc.svg
 
-appdefaultdir = @appdefaultdir@
-
-dist_appdefault_DATA = \
-        app-defaults/XCalc \
-        app-defaults/XCalc-color
+# Headless tests of the math engine
+check_PROGRAMS = test-engine
+test_engine_SOURCES = tests/test_engine.c actions.c math.c xcalc.h
+test_engine_CFLAGS = $(CWARNFLAGS)
+test_engine_LDADD = -lm
+TESTS = test-engine
 
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
@@ -53,4 +58,4 @@ ChangeLog:
 
 dist-hook: ChangeLog INSTALL
 
-EXTRA_DIST = README.md meson.build meson.options
+EXTRA_DIST = README.md CHANGELOG.md meson.build autogen.sh docs

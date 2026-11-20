@@ -25,17 +25,24 @@
 project(
   'xcalc',
   'c',
-  version: '1.1.3',
+  version: '1.1.4',
   license: 'X11',
   license_files: 'COPYING',
   meson_version: '>= 1.1.0',
+  default_options: ['c_std=gnu11', 'warning_level=2'],
 )
 
 conf = configuration_data()
 conf.set_quoted('PACKAGE_STRING',
                 ' '.join(meson.project_name(), meson.project_version()))
+conf.set_quoted('PACKAGE_VERSION', meson.project_version())
 
 cc = meson.get_compiler('c')
+
+# The key tables are intentionally partially initialised
+if cc.has_argument('-Wno-missing-field-initializers')
+  add_project_arguments('-Wno-missing-field-initializers', language: 'c')
+endif
 
 # Replacement for XORG_DEFAULT_OPTIONS
 if cc.has_argument('-fno-strict-aliasing')
@@ -49,34 +56,36 @@ config_h = configure_file(output: 'config.h', configuration: conf)
 add_project_arguments('-DHAVE_CONFIG_H', language: ['c'])
 
 # Checks for pkg-config packages
-dep_libxaw = dependency('xaw7', required: true)
-dep_libxt  = dependency('xt', required: true)
-dep_libx11 = dependency('x11', required: true)
-dep_xproto = dependency('xproto', required: true, version: '>= 7.0.22')
+dep_gtk = dependency('gtk+-3.0', version: '>= 3.22', required: true)
+dep_libm = cc.find_library('m', required: false)
 
-dep_libm = cc.find_library('m', required : false)
-
-add_project_arguments('-D_CONST_X_STRING', language: ['c'])
+engine_sources = ['actions.c', 'math.c']
 
 executable(
   'xcalc',
-  [config_h, 'actions.c', 'math.c', 'xcalc.c', 'xcalc.h'],
-  dependencies: [dep_libxaw, dep_libxt, dep_libx11, dep_xproto, dep_libm],
-  install: true
+  [config_h, engine_sources, 'xcalc.c', 'xcalc.h', 'style.h'],
+  dependencies: [dep_gtk, dep_libm],
+  install: true,
 )
 
-# Find directory for installing app-defaults files
-appdefaultdir = get_option('appdefaultdir')
-if appdefaultdir == ''
-  appdefaultdir = dep_libxt.get_variable('appdefaultdir')
+# Desktop entry and icon
+install_data('data/xcalc.desktop',
+             install_dir: get_option('datadir') / 'applications')
+install_data('data/icons/hicolor/scalable/apps/xcalc.svg',
+             install_dir: get_option('datadir') / 'icons/hicolor/scalable/apps')
+
+# Headless tests of the math engine
+test_engine = executable(
+  'test-engine',
+  [config_h, engine_sources, 'tests/test_engine.c'],
+  dependencies: [dep_libm],
+)
+test('engine', test_engine)
+
+desktop_validate = find_program('desktop-file-validate', required: false)
+if desktop_validate.found()
+  test('desktop-file', desktop_validate, args: [files('data/xcalc.desktop')])
 endif
-summary('appdefaultdir', appdefaultdir)
-
-# App default files  (*.ad)
-install_data(
- ['app-defaults/XCalc', 'app-defaults/XCalc-color'],
- install_dir: appdefaultdir,
-)
 
 # Man page
 prog_sed = find_program('sed')
@@ -90,7 +99,6 @@ custom_target(
     '-e', 's/__xorgversion__/"xcalc @0@" "X Version 11"/'.format(meson.project_version()),
     '-e', 's/__appmansuffix__/1/g',
     '-e', 's/__miscmansuffix__/7/g',
-    '-e', f's%__apploaddir__%@appdefaultdir@%g',    
     '@INPUT@',
   ],
   capture: true,

@@ -41,19 +41,18 @@ from the X Consortium.
 # include "config.h"
 #endif
 
-#include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>
-
 #include <stdio.h>
-#include <X11/Xos.h>
+#include <stdlib.h>
+#include <string.h>
+#include <strings.h>
 #include <math.h>
 #include <signal.h>
-#if !defined(IEEE) && defined(SVR4)
-#include <siginfo.h>
-#endif
 #include <setjmp.h>
 #include <errno.h>
-#include <X11/Xlocale.h>
+#include <locale.h>
+
+#define XC_NORETURN __attribute__((noreturn))
+#define XC_UNUSED   __attribute__((unused))
 
 #define kRECIP 0	/* reciprocal */
 #define kSQR   1	/* square */
@@ -128,13 +127,16 @@ from the X Consortium.
 #define XCalc_DEC	7	/* decimal (base 10) indicator */
 #define XCalc_OCT	8	/* octal (base 8) indicator */
 
-/* actions.c */
-extern XtActionsRec Actions[];
-extern int ActionsCount;
+/* actions.c
+ *
+ * Dispatch a calculator action by name, e.g. "add", "equal" or "digit:7".
+ * Returns 1 if the action exists, 0 otherwise.
+ */
+extern int calc_action(const char *name);
 
 /* math.c */
-extern void fperr(int sig) _X_NORETURN;
-extern void illerr(int sig) _X_NORETURN;
+extern void fperr(int sig) XC_NORETURN;
+extern void illerr(int sig) XC_NORETURN;
 extern void fail_op(void);
 extern int pre_op(int keynum);
 extern void post_op(void);
@@ -161,19 +163,16 @@ extern void offf(void);
 extern void ResetCalc(void);
 
 #ifndef IEEE
-extern jmp_buf env;
+extern sigjmp_buf env;
 #endif
 
-/* xcalc.c */
-extern void do_select(Time time);
-extern void draw(char *string);
-extern void Quit(void) _X_NORETURN;
+/* Front-end hooks, implemented by xcalc.c (GTK3) or by the test harness */
+extern void draw(const char *string);
 extern void ringbell(void);
-extern void setflag(int indicator, Boolean on);
+extern void setflag(int indicator, int on);
 
 extern int rpn;
 #define LCD_STR_LEN	32
 extern char dispstr[LCD_STR_LEN];
-extern Atom wm_delete_window;
 
 #endif

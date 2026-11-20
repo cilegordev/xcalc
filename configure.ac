@@ -23,7 +23,7 @@ dnl Process this file with autoconf to create configure.
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xcalc], [1.1.3],
+AC_INIT([xcalc], [1.1.4],
         [https://gitlab.freedesktop.org/xorg/app/xcalc/-/issues], [xcalc])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
@@ -40,16 +40,7 @@ XORG_DEFAULT_OPTIONS
 AC_CHECK_FUNCS([strlcpy])
 
 # Checks for pkg-config packages
-PKG_CHECK_MODULES(XCALC, [xaw7 xt x11 xproto >= 7.0.22])
-
-PKG_CHECK_MODULES(APPDEFS, xt)
-xt_appdefaultdir=`$PKG_CONFIG --variable=appdefaultdir xt`
-AC_ARG_WITH(appdefaultdir,
-	AS_HELP_STRING([--with-appdefaultdir=<pathname>],
-	  [specify directory for app-defaults files (default is autodetected)]),
-	[appdefaultdir="$withval"], [appdefaultdir="${xt_appdefaultdir}"])
-AC_SUBST(appdefaultdir)
-
+PKG_CHECK_MODULES(XCALC, [gtk+-3.0 >= 3.22])
 
 AC_CONFIG_FILES([
 	Makefile

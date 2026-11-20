@@ -35,7 +35,7 @@
 #define False   0
 
 #ifndef IEEE
-jmp_buf env;
+sigjmp_buf env;
 #endif
 
 
@@ -132,7 +132,7 @@ format_double(double n)
         snprintf(dispstr, sizeof(dispstr), "%lX", (long)n);
     break;
     default:
-        snprintf(dispstr, sizeof(dispstr), "%.8g", n);
+        snprintf(dispstr, sizeof(dispstr), "%.12g", n);
     }
 }
 
@@ -180,7 +180,7 @@ void fperr(int sig)
     signal(SIGFPE, fperr);
 #endif
     SignalKind = sig;
-    longjmp(env,1);
+    siglongjmp(env,1);
 }
 
 /* for VAX BSD4.3 */
@@ -191,7 +191,7 @@ void illerr(int sig)
     signal(SIGILL, illerr);
 
     SignalKind = sig;
-    longjmp(env,1);
+    siglongjmp(env,1);
 }
 
 #endif	/* not IEEE */
@@ -217,7 +217,7 @@ static void
 DrawDisplay(void)
 {
     if (strlen(dispstr) >= MAXDISP) { /* strip out some decimal digits */
-        char *estr = index(dispstr,'e');  /* search for exponent part */
+        char *estr = strchr(dispstr,'e');  /* search for exponent part */
         if (!estr) dispstr[12]='\0';      /* no exp, just trunc. */
         else {
             char tmp[32];
